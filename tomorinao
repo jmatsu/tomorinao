@@ -8,6 +8,10 @@ mktemp() {
   command mktemp 2>/dev/null || command mktemp -t tmp
 }
 
+finalize() {
+  rm -f ${_TEMP_FILE} ${_TEMP_FILE2}
+}
+
 _TEMP_FILE=$(mktemp)
 _TEMP_FILE2=$(mktemp)
 
@@ -103,7 +107,15 @@ cat<<'HERE' > $_TEMP_FILE
 HERE
 fi
 
-wget -q "https://raw.githubusercontent.com/tomorinao/tomorinao/master/TomoriNao.txt" -O $_TEMP_FILE2
+if has "wget"; then
+  wget -q "https://raw.githubusercontent.com/tomorinao/tomorinao/master/TomoriNao.txt" -O $_TEMP_FILE2
+elif has "curl"; then
+  curl "https://raw.githubusercontent.com/tomorinao/tomorinao/master/TomoriNao.txt" > $_TEMP_FILE2 2>/dev/null
+else
+  echo "Please install curl or wget"
+  finalize
+  exit 1
+fi
 
 _NR=$(awk 'END{print NR}' $_TEMP_FILE2)
 
@@ -119,4 +131,4 @@ else
   cat $_TEMP_FILE
 fi
 
-rm -f ${_TEMP_FILE} ${_TEMP_FILE2}
+finalize
